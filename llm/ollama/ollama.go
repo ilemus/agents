@@ -7,8 +7,26 @@ import (
 	"strings"
 
 	"agents/llm"
+
 	"github.com/ollama/ollama/api"
 )
+
+// This is an example default ollama option for a highly predictable and consistent response.
+var ollamaOptions = map[string]interface{}{
+	"temperature": 0.2, // Low temperature for more deterministic responses
+	"top_p":       0.9, // Nucleus sampling
+	"top_k":       20,  // Limit pool of top tokens
+	// "num_predict": 1000,  // Max tokens to generate
+	// Note: "reasoning_effort" or similar parameters depend on the specific model support (e.g., DeepSeek R1)
+}
+
+// This is an example default ollama option for a predictable but creative response.
+var ollamaCreativeOptions = map[string]interface{}{
+	"temperature": 0.7,  // Balanced creativity
+	"top_p":       0.85, // High nucleus sampling for diverse token choices
+	"top_k":       35,   // Wider pool of tokens to choose from
+	"num_predict": 2000, // Max tokens to generate, try to limit unlimited creativity.
+}
 
 // Client implements the llm.Client interface using the official Ollama API client.
 type Client struct {

@@ -136,3 +136,76 @@ For coding projects, the agent should optionally be able to:
 
 - View the project and related code changes (diffs)
 - Interpret those diffs in the context of the user's reference documents and created docs
+
+
+# Workflow Knowledge & Storage Design
+
+## Overview
+
+Knowledge is a core part of how the system operates — the outputs of each step, whether document findings, communications, or other artifacts, should be stored. There are a couple of types to account for: structured files (markdowns) and shorthand notes. All of these feed into a [[Vector Database]] which stores semantic chunks of the notes and markdowns.
+
+---
+
+## Storage Categories
+
+There should be three distinct categories, each stored in its own collection/table:
+
+- **`workflow`** — task steps, state, and related operational data
+- **`documentation`** — formatted markdown documents
+- **`unstructured_notes`** — thought dumps and shorthand notes
+
+Keeping these segregated makes it easier to query the right type of content at the right time, and avoids mixing structured task state with looser exploratory notes.
+
+---
+
+## Vector Store
+
+The [[Vector Database]] stores semantic chunks with references back to the parent document. This parent-child chunking provides context throughout a project and makes things easily able to be referenced in the future.
+
+**Example use case:** a workflow like "create a quarterly report" should be able to query across stored documents and notes — pulling highlights, topics discussed, findings — based on what was produced during that period.
+
+### Metadata
+
+Each record in the vector store should include:
+
+- **Timestamp of ingestion** — when the record was stored
+- **Creation date** — for markdown documents, when the document was first created
+- **Modification history** — a separate table that records every time a document was updated (datetime stamps per update)
+
+> Full versioning is deferred for now — don't want to store the same content 10 times over. Efficient versioning could be a future add-on.
+
+---
+
+## Retrieval
+
+Agents should be able to query — or load in some structured way — the relevant docs based on two signals:
+
+1. **The initial trigger/prompt** — what kicked off the workflow (email, chat message, log entry, stack trace + description, etc.)
+2. **The current task state** — the refined, more detailed prompt as the task develops
+
+So retrieval is context-sensitive: it starts broad based on the first prompt and narrows as the task gets more defined.
+
+---
+
+## Workflow Triggers
+
+A workflow might be kicked off by any of the following:
+
+- An email
+- A chat message
+- A log entry (e.g. a stack trace or error with a brief description of the request)
+
+These triggers eventually get expanded upon as the workflow progresses.
+
+---
+
+## Workflow State Management
+
+The [[Vector Database]] is separate from [[Workflow State Management]], which should be its own, more rigid database structure. That structure should include:
+
+- `step` — the current step
+- `step_name`
+- `step_details`
+- A graph-like tree state — with fields like `next_step` to traverse the workflow
+
+This keeps operational state management cleanly separated from the knowledge/retrieval layer.

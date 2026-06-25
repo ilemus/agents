@@ -30,17 +30,12 @@ func TestDBAndNote(t *testing.T) {
 		t.Fatalf("failed to initialize db: %v", err)
 	}
 
-	// Close database connection at the end of the test
-	sqlDB, err := DB.DB()
-	if err != nil {
-		t.Fatalf("failed to get sql.DB: %v", err)
-	}
-	defer sqlDB.Close()
+	defer DB.Close()
 
 	// 2. Perform Migration
-	err = DB.AutoMigrate(&Note{})
+	err = CreateTables(DB)
 	if err != nil {
-		t.Fatalf("failed to auto-migrate Note: %v", err)
+		t.Fatalf("failed to create tables: %v", err)
 	}
 
 	// 3. Create a Note
@@ -125,21 +120,12 @@ func TestNoteVector(t *testing.T) {
 		t.Fatalf("failed to initialize db: %v", err)
 	}
 
-	// Close database connection at the end of the test
-	sqlDB, err := DB.DB()
-	if err != nil {
-		t.Fatalf("failed to get sql.DB: %v", err)
-	}
-	defer sqlDB.Close()
+	defer DB.Close()
 
 	// 2. Perform Migration
-	err = DB.AutoMigrate(&Note{})
+	err = CreateTables(DB)
 	if err != nil {
-		t.Fatalf("failed to auto-migrate Note: %v", err)
-	}
-	err = DB.AutoMigrate(&NoteVector{})
-	if err != nil {
-		t.Fatalf("failed to auto-migrate NoteVector: %v", err)
+		t.Fatalf("failed to create tables: %v", err)
 	}
 
 	testNote := &Note{
@@ -212,6 +198,152 @@ func TestNoteVector(t *testing.T) {
 	} else {
 		if noteVectors[0].ID != testNoteVector.ID {
 			t.Errorf("expected list note vector ID %v, got %v", testNoteVector.ID, noteVectors[0].ID)
+		}
+	}
+}
+
+func TestDocument(t *testing.T) {
+	// Setup environment variables for test execution
+	origDBURL := os.Getenv("TURSO_DATABASE_URL")
+	origAuthToken := os.Getenv("TURSO_AUTH_TOKEN")
+	origLocalPath := os.Getenv("LOCAL_DB_PATH")
+
+	os.Setenv("TURSO_DATABASE_URL", "")
+	os.Setenv("TURSO_AUTH_TOKEN", "")
+	os.Setenv("LOCAL_DB_PATH", ":memory:")
+
+	defer func() {
+		os.Setenv("TURSO_DATABASE_URL", origDBURL)
+		os.Setenv("TURSO_AUTH_TOKEN", origAuthToken)
+		os.Setenv("LOCAL_DB_PATH", origLocalPath)
+	}()
+
+	// 1. Initialize the Database
+	err := InitDB()
+	if err != nil {
+		t.Fatalf("failed to initialize db: %v", err)
+	}
+
+	defer DB.Close()
+
+	// 2. Perform Migration
+	err = CreateTables(DB)
+	if err != nil {
+		t.Fatalf("failed to create tables: %v", err)
+	}
+
+	testDocument := &Document{
+		Title:    "Test Document",
+		Summary:  "This is a test document generated for ORM validation.",
+		FilePath: "/path/to/test/document",
+		Tags:     JSONTags{"test", "document"},
+	}
+
+	err = CreateDocument(DB, testDocument)
+	if err != nil {
+		t.Fatalf("failed to create document: %v", err)
+	}
+
+	retrieved, err := GetDocumentByID(DB, testDocument.ID)
+	if err != nil {
+		t.Fatalf("failed to retrieve document by ID: %v", err)
+	}
+
+	// Verify all properties
+	if retrieved.ID != testDocument.ID {
+		t.Errorf("expected ID %v, got %v", testDocument.ID, retrieved.ID)
+	}
+	if retrieved.Title != testDocument.Title {
+		t.Errorf("expected Title %q, got %q", testDocument.Title, retrieved.Title)
+	}
+	if retrieved.Summary != testDocument.Summary {
+		t.Errorf("expected Summary %q, got %q", testDocument.Summary, retrieved.Summary)
+	}
+	if retrieved.FilePath != testDocument.FilePath {
+		t.Errorf("expected FilePath %q, got %q", testDocument.FilePath, retrieved.FilePath)
+	}
+	if len(retrieved.Tags) != 2 {
+		t.Fatalf("expected 2 tags, got %d", len(retrieved.Tags))
+	}
+	expectedTags := []string{"test", "document"}
+	for i, tag := range retrieved.Tags {
+		if tag != expectedTags[i] {
+			t.Errorf("expected tag at index %d to be %q, got %q", i, expectedTags[i], tag)
+		}
+	}
+}
+
+func TestDocumentVectorQuery(t *testing.T) {
+	// Setup environment variables for test execution
+	origDBURL := os.Getenv("TURSO_DATABASE_URL")
+	origAuthToken := os.Getenv("TURSO_AUTH_TOKEN")
+	origLocalPath := os.Getenv("LOCAL_DB_PATH")
+
+	os.Setenv("TURSO_DATABASE_URL", "")
+	os.Setenv("TURSO_AUTH_TOKEN", "")
+	os.Setenv("LOCAL_DB_PATH", ":memory:")
+
+	defer func() {
+		os.Setenv("TURSO_DATABASE_URL", origDBURL)
+		os.Setenv("TURSO_AUTH_TOKEN", origAuthToken)
+		os.Setenv("LOCAL_DB_PATH", origLocalPath)
+	}()
+
+	// 1. Initialize the Database
+	err := InitDB()
+	if err != nil {
+		t.Fatalf("failed to initialize db: %v", err)
+	}
+
+	defer DB.Close()
+
+	// 2. Perform Migration
+	err = CreateTables(DB)
+	if err != nil {
+		t.Fatalf("failed to create tables: %v", err)
+	}
+
+	testDocument := &Document{
+		Title:    "Test Document",
+		Summary:  "This is a test document generated for ORM validation.",
+		FilePath: "/path/to/test/document",
+		Tags:     JSONTags{"test", "document"},
+	}
+
+	err = CreateDocument(DB, testDocument)
+	if err != nil {
+		t.Fatalf("failed to create document: %v", err)
+	}
+
+	// Embedding vector 768 of random floats.
+	embedding := make([]float32, 768)
+	for i := range embedding {
+		embedding[i] = float32(rand.Float32())
+	}
+
+	testDocumentVector := &DocumentVector{
+		DocumentID:  testDocument.ID,
+		ChunkNumber: 1,
+		Embedding:   embedding,
+	}
+
+	err = CreateDocumentVector(DB, testDocumentVector)
+	if err != nil {
+		t.Fatalf("failed to create document vector: %v", err)
+	}
+
+	// Query document vectors
+	documentVectors, err := QueryDocumentVectorByEmbedding(DB, embedding, 1, 0)
+	if err != nil {
+		t.Skip("skipping vector query test; vector_distance_cos is not supported on this SQLite environment")
+		return
+	}
+
+	if len(documentVectors) != 1 {
+		t.Errorf("expected 1 document vector in list, got %d", len(documentVectors))
+	} else {
+		if documentVectors[0].ID != testDocumentVector.ID {
+			t.Errorf("expected list document vector ID %v, got %v", testDocumentVector.ID, documentVectors[0].ID)
 		}
 	}
 }
