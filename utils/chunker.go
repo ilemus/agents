@@ -9,7 +9,9 @@ import (
 	"strings"
 	"sync"
 
-	ollama "github.com/ollama/ollama/api"
+	"agents/llm"
+	"agents/llm/ollama"
+
 	"gonum.org/v1/gonum/floats"
 )
 
@@ -37,15 +39,12 @@ type SemanticChunker struct {
 	MinSentences        int     // Prevents trivially small chunks
 	MaxChars            int     // Safety valve: forces a split if a chunk gets too long
 	WindowSize          int     // Number of sentences to average for smoothing
-	Client              *ollama.Client
+	Client              llm.Client
 }
 
 // NewSemanticChunker initializes the chunker with sensible defaults.
 func NewSemanticChunker(modelName string) *SemanticChunker {
-	client, err := ollama.ClientFromEnvironment()
-	if err != nil {
-		log.Fatalf("Failed to initialize Ollama client: %v", err)
-	}
+	client := ollama.NewClient("")
 
 	return &SemanticChunker{
 		ModelName:           modelName,
@@ -137,7 +136,7 @@ func (sc *SemanticChunker) ChunkText(ctx context.Context, text string) ([]Chunk,
 	// ---------------------------------------------------------
 	// We pass the ENTIRE slice of sentences to the `Input` field.
 	// This results in a SINGLE API request, drastically reducing network overhead.
-	req := &ollama.EmbedRequest{
+	req := llm.EmbedRequest{
 		Model: sc.ModelName,
 		Input: sentences,
 	}

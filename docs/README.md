@@ -6,7 +6,7 @@ Welcome to the design documentation directory. This folder contains technical sp
 
 As the project evolves, design documents for the following systems will be detailed here:
 
-### 1. Reverse Agent Planner (`docs/planner_design.md`)
+### 1. Reverse Agent Planner (`docs/godesign/HIGH_LEVEL_DESIGN.md`)
 - User-to-agent task loop mechanics
 - Prompt templates and structuring algorithms
 - Decomposition models and tracking schemas

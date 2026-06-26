@@ -24,8 +24,8 @@ graph TD
 
     subgraph Provider Implementation
         Ollama[llm/ollama.Client]
-        OpenAI[llm/openai.Client (Future)]
-        Gemini[llm/gemini.Client (Future)]
+        OpenAI["llm/openai.Client (Future)"]
+        Gemini["llm/gemini.Client (Future)"]
     end
 
     App -->|Uses| Interface
