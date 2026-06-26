@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"agents/llm"
+	"github.com/ilemus/agents/llm"
 )
 
 type mockClient struct{}

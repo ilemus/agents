@@ -10,8 +10,8 @@ type Message struct {
 
 // ChatRequest represents the standard request payload for a chat completion.
 type ChatRequest struct {
-	Model    string                 `json:"model"`    // The name of the LLM model to use
-	Messages []Message              `json:"messages"` // The conversational context
+	Model    string                 `json:"model"`             // The name of the LLM model to use
+	Messages []Message              `json:"messages"`          // The conversational context
 	Options  map[string]interface{} `json:"options,omitempty"` // Provider-specific optional parameters
 }
 

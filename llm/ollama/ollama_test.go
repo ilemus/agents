@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"agents/llm"
+	"github.com/ilemus/agents/llm"
 	"github.com/ollama/ollama/api"
 )
 

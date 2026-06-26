@@ -44,9 +44,12 @@ func TestDBAndNote(t *testing.T) {
 		Tags: JSONTags{"llm", "database", "turso"},
 	}
 
-	err = CreateNote(DB, testNote)
+	noteID, err := CreateNote(DB, testNote)
 	if err != nil {
 		t.Fatalf("failed to create note: %v", err)
+	}
+	if noteID != testNote.ID {
+		t.Errorf("expected returned note ID %v, got %v", testNote.ID, noteID)
 	}
 
 	// Verify that the UUID and CreatedAt were generated via hooks
@@ -133,9 +136,12 @@ func TestNoteVector(t *testing.T) {
 		Tags: JSONTags{"llm", "database", "turso"},
 	}
 
-	err = CreateNote(DB, testNote)
+	noteID, err := CreateNote(DB, testNote)
 	if err != nil {
 		t.Fatalf("failed to create note: %v", err)
+	}
+	if noteID != testNote.ID {
+		t.Errorf("expected returned note ID %v, got %v", testNote.ID, noteID)
 	}
 
 	// Genearate a random float32 array of size 768

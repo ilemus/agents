@@ -1,4 +1,4 @@
-module agents
+module github.com/ilemus/agents
 
 go 1.26.4
 

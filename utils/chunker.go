@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"agents/llm"
-	"agents/llm/ollama"
+	"github.com/ilemus/agents/llm"
+	"github.com/ilemus/agents/llm/ollama"
 
 	"gonum.org/v1/gonum/floats"
 )

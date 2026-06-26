@@ -6,13 +6,13 @@ import (
 	"net/url"
 	"strings"
 
-	"agents/llm"
+	"github.com/ilemus/agents/llm"
 
 	"github.com/ollama/ollama/api"
 )
 
 // This is an example default ollama option for a highly predictable and consistent response.
-var ollamaOptions = map[string]interface{}{
+var DefaultOptions = map[string]interface{}{
 	"temperature": 0.2, // Low temperature for more deterministic responses
 	"top_p":       0.9, // Nucleus sampling
 	"top_k":       20,  // Limit pool of top tokens
@@ -21,7 +21,7 @@ var ollamaOptions = map[string]interface{}{
 }
 
 // This is an example default ollama option for a predictable but creative response.
-var ollamaCreativeOptions = map[string]interface{}{
+var CreativeOptions = map[string]interface{}{
 	"temperature": 0.7,  // Balanced creativity
 	"top_p":       0.85, // High nucleus sampling for diverse token choices
 	"top_k":       35,   // Wider pool of tokens to choose from

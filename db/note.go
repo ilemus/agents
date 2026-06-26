@@ -16,7 +16,7 @@ type Note struct {
 }
 
 // CreateNote inserts a new note into the database.
-func CreateNote(db *sql.DB, note *Note) error {
+func CreateNote(db *sql.DB, note *Note) (uuid.UUID, error) {
 	if note.ID == uuid.Nil {
 		note.ID = uuid.New()
 	}
@@ -26,7 +26,10 @@ func CreateNote(db *sql.DB, note *Note) error {
 
 	query := `INSERT INTO notes (id, note, created_at, tags) VALUES (?, ?, ?, ?)`
 	_, err := db.Exec(query, note.ID.String(), note.Note, note.CreatedAt, note.Tags)
-	return err
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return note.ID, nil
 }
 
 // GetNoteByID retrieves a note from the database by its UUID.
